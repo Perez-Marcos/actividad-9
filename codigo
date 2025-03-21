@@ -1,0 +1,47 @@
+// Cargar los datos
+data = [
+    40, 1, 2, 140, 289, 0, 0, 172, 0, 0, -9, -9, -9, 0;
+    // Añadir más filas de datos aquí
+];
+
+// Reemplazar valores desconocidos (-9) con la media de la columna
+for i = 1:size(data, 2)
+    col = data(:, i);
+    unknownInd = find(col == -9);
+    if size(unknownInd, 'r') > 0 then
+        col(unknownInd) = mean(col(col <> -9));
+        data(:, i) = col;
+    end
+end
+
+// Separar características y etiquetas
+X = data(:, 1:13); // Características
+y = data(:, 14);   // Etiquetas
+
+// Normalizar los datos
+X = (X - mean(X)) ./ stdev(X);
+
+// Dividir los datos en entrenamiento y prueba
+[trainInd, testInd] = gsplit(size(X, 1), 0.7);
+X_train = X(trainInd, :);
+y_train = y(trainInd);
+X_test = X(testInd, :);
+y_test = y(testInd);
+
+// Definir la arquitectura de la red neuronal
+inputLayerSize = size(X, 2);
+hiddenLayerSize = 10;
+outputLayerSize = 5; // 5 clases (0, 1, 2, 3, 4)
+
+net = mlp_new([inputLayerSize, hiddenLayerSize, outputLayerSize], 'logistic');
+
+// Entrenar la red neuronal
+options = list('maxiter', 1000, 'tol', 1e-4);
+[net, J] = mlp_train(net, X_train, y_train, options);
+
+// Hacer predicciones
+y_pred = mlp_predict(net, X_test);
+
+// Evaluar el rendimiento
+accuracy = sum(y_pred == y_test) / length(y_test);
+disp("Precisión: " + string(accuracy));
